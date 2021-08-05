@@ -1,124 +1,76 @@
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
+#include "../include/main.h"
 
-#include <iostream>
-#include <iterator>
+namespace po = boost::program_options;
 using namespace std;
 
-int main(int ac, char* av[])
-{
-    try {
 
-        po::options_description desc("Allowed options");
-        desc.add_options()
-            ("help,h", "produce help message")
-            ("compression", po::value<double>(), "set compression level")
+/* main.c  */
+int main(int argc, char* argv[])
+{
+
+    //sudo ip link set can0 type can bitrate 500000
+    //sudo ifconfig can0 up
+
+    try {
+        
+        bool flag = false;
+
+        // Declare command line (generic) options 
+        po::options_description generic("Generic options");
+        generic.add_options()
+            ("help,h", "produce help message")    
         ;
 
-        po::variables_map vm;        
-        po::store(po::parse_command_line(ac, av, desc), vm);
-        po::notify(vm);    
+        // Declare the supported options on the command line and file
+        po::options_description config("Configuration");
+        config.add_options()
+            ("command", po::value<vector<string>>()->multitoken(), "Desired command (send, receive)")
+            //("send,s", po::value<vector<string>>(), "Send messages <id><data> (eg: 123 DEADBEEF)")
+            //("receive,r", po::value<int>()->default_value(10) ,"Receive messages")
+            ("cyclic,C", po::bool_switch(&flag), "[opt] cyclic messaging")
+        ;
+        
+        // Declare the positional options
+        po::positional_options_description p;
+        p.add("command", -1);
 
+
+        po::options_description visible("Allowed options");
+        visible.add(generic).add(config);
+
+        po::variables_map vm;
+        po::store(po::command_line_parser(argc, argv).
+                    options(visible).positional(p).run(), vm);
+        po::notify(vm);  
+    
         if (vm.count("help")) {
-            cout << desc << "\n";
+            cout << visible << endl;
             return 0;
         }
-
-        if (vm.count("compression")) {
-            cout << "Compression level was set to " 
-                 << vm["compression"].as<double>() << ".\n";
-        } else {
-            cout << "Compression level was not set.\n";
+        if (vm.count("command")) {
+            //verificar o tamanho do vec
+            vector<string> vec = vm["command"].as<vector<string>>();
+            if(vec[0]=="send"){
+                //send message    
+                cout << "Sending message " << vec[1] << " to " << vec[0] << endl;
+                if(flag) cout << "Sending more";
+                return 0;
+            }
+            if(vec[0]=="receive"){
+                //receive message
+                return 0;
+            }
+            
+            cout << "Invalid command option" << endl;
+            return 1;
         }
     }
     catch(exception& e) {
         cerr << "error: " << e.what() << "\n";
         return 1;
-    }
-    catch(...) {
-        cerr << "Exception of unknown type!\n";
     }
 
     return 0;
+
+    //sudo ifconfig can0 down
 }
-
-
-
-
-/* #include "../include/main.h"
-#include <boost/program_options.hpp>
-
-using namespace std;
-using namespace boost::program_options;
-
-main.c 
-int main(int ac, char* av[])
-{
-
-     try {
-
-        options_description desc("Allowed options");
-        desc.add_options()
-            ("help", "produce help message")
-            ("compression", value<double>(), "set compression level")
-        ;
-
-        variables_map vm;        
-        store(parse_command_line(ac, av, desc), vm);
-        notify(vm);    
-
-        if (vm.count("help")) {
-            cout << desc << "\n";
-            return 0;
-        }
-
-        if (vm.count("compression")) {
-            cout << "Compression level was set to " 
-                 << vm["compression"].as<double>() << ".\n";
-        } else {
-            cout << "Compression level was not set.\n";
-        }
-    }
-    catch(exception& e) {
-        cerr << "error: " << e.what() << "\n";
-        return 1;
-    }
-    catch(...) {
-        cerr << "Exception of unknown type!\n";
-    }
-
-
-    int input;
-    bool leave = false;
-
-    while (!leave)
-    {
-        cout << "Welcome to Caravel!\n";
-        cout << "\t1. Send messages\n";
-        cout << "\t2. Receive messages\n";
-        cout << "\t3. Exit\n";
-        
-        cout << "$ ";
-
-        cin >> input;
-
-        switch (input)
-        {
-        case 1:
-            cout << "Sending messages";
-            break;
-        case 2:
-            cout << "Receiving messages";
-            break;
-        case 3:
-            cout << "Bye!\n";
-            leave = true;
-        default:
-            break;
-        }
-    }
-
-
-}
-
- */

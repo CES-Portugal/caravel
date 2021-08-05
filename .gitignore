@@ -53,4 +53,11 @@ _deps
 # External projects
 *-prefix/
 
+### Conan ###
+# Conan build information
+conan.lock
+conanbuildinfo.*
+conaninfo.txt
+graph_info.json
+
 # End of https://www.toptal.com/developers/gitignore/api/cmake,c++
