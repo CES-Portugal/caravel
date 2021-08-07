@@ -3,6 +3,8 @@
 namespace po = boost::program_options;
 using namespace std;
 
+#define RECEIVE_CMD 1
+#define SEND_CMD 0
 
 /* main.c  */
 int main(int argc, char* argv[])
@@ -18,15 +20,15 @@ int main(int argc, char* argv[])
         // Declare command line (generic) options 
         po::options_description generic("Generic options");
         generic.add_options()
-            ("help,h", "produce help message")    
+            ("help,h", "Produce help message")    
         ;
 
         // Declare the supported options on the command line and file
         po::options_description config("Configuration");
         config.add_options()
-            ("command", po::value<vector<string>>()->multitoken(), "Desired command (send, receive)")
-            //("send,s", po::value<vector<string>>(), "Send messages <id><data> (eg: 123 DEADBEEF)")
-            //("receive,r", po::value<int>()->default_value(10) ,"Receive messages")
+            ("command", po::value<string>(), "Desired command (send, receive)")
+            ("id", po::value<int>(), "Message id (eg: 123)")
+            ("message,m", po::value<string>() ,"Message data (eg: \"DEADBEEF\")")
             ("cyclic,C", po::bool_switch(&flag), "[opt] cyclic messaging")
         ;
         
@@ -48,16 +50,20 @@ int main(int argc, char* argv[])
             return 0;
         }
         if (vm.count("command")) {
-            //verificar o tamanho do vec
-            vector<string> vec = vm["command"].as<vector<string>>();
-            if(vec[0]=="send"){
-                //send message    
-                cout << "Sending message " << vec[1] << " to " << vec[0] << endl;
-                if(flag) cout << "Sending more";
-                return 0;
+            string cmd = vm["command"].as<string>();
+
+            if(cmd=="send"){
+                 
+                if(vm.count("id")&&vm.count("message")){
+                    run(SEND_CMD, vm["id"].as<int>(), vm["message"].as<string>());
+                    return 0;
+                }
+                cout << "Missing id or message data parameter." << endl;
+                return 1;
             }
-            if(vec[0]=="receive"){
-                //receive message
+
+            if(cmd=="receive"){                
+                run(RECEIVE_CMD);
                 return 0;
             }
             
