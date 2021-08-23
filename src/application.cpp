@@ -7,10 +7,13 @@ using namespace std;
 
 void run(int cmd,int id, std::string message){
 
-    //ID and MSG validation
-    int s, nbytes;
-    struct can_frame frame;
+    int s;
     
+    if(!valid_hex_str(message)) {
+        cout << "Invalid message input!" << endl;
+        return;
+    }
+
     if (setup_socket(s)) return;    
 
     //4.Disable filtering rules, do not receive packets, only send

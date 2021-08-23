@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
         config.add_options()
             ("command", po::value<string>(), "Desired command (send, receive)")
             ("id", po::value<int>(), "Message id (eg: 123)")
-            ("message,m", po::value<string>() ,"Message data (eg: \"DEADBEEF\")")
+            ("message,m", po::value<string>() ,"Message data in hex (eg: \"DEADBEEF\")")
             ("cyclic,C", po::bool_switch(&flag), "[opt] cyclic messaging")
         ;
         
