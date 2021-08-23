@@ -98,14 +98,44 @@ void run_send(const int& fd,const int& id,const std::string& message){
 void run_receive(const int& fd){
     int nbytes;
     struct can_frame frame;
+    struct timespec time;
+
+    pcpp::PcapFileWriterDevice pcapWriter("output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
+    if (!pcapWriter.open())
+	{
+		printf("Cannot open output.pcap for writing\n");
+		exit(1);
+	}
+
 
     cout << "Receiving Data:\n";
-    while (1)
+    
+    auto start = chrono::steady_clock::now();
+    int n_msg = 0;
+
+    while (n_msg<2)
     {
         nbytes = read(fd, &frame, sizeof(frame));
-
+        
         if (nbytes > 0)
         {
+            if(n_msg==0) {
+                start = chrono::steady_clock::now();
+                time.tv_sec = 0;
+                time.tv_nsec = 0;
+            }
+            else{
+                auto end = chrono::steady_clock::now();
+                auto elapsed_nsec = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+                auto elapsed_sec = chrono::duration_cast<chrono::seconds>(end - start).count();
+
+                time.tv_sec = elapsed_sec;
+                time.tv_nsec = elapsed_nsec - (elapsed_sec*pow(10.0,9.0));
+            }
+            
+            pcpp::RawPacket rawPacket(frame.data, frame.can_dlc, time,false, pcpp::LINKTYPE_CAN_SOCKETCAN);
+            pcapWriter.writePacket(rawPacket);
+
             //Output message
             printf("can_id = 0x%X\r\ncan_dlc = %d \r\n", frame.can_id, frame.can_dlc);
             int i = 0;
@@ -113,5 +143,8 @@ void run_receive(const int& fd){
                 printf("data[%d] = %d\r\n", i, frame.data[i]);
             nbytes=0;
         }
+        n_msg++;
     } 
+    pcapWriter.close();
 }
+

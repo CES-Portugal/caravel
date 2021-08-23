@@ -1,5 +1,6 @@
  [requires]
  boost/1.76.0
+ pcapplusplus/21.05
 
  [generators]
  cmake

@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sstream>
+#include <time.h>
+#include <chrono>
+#include <math.h>
 
 #include <unistd.h>
 #include <net/if.h>
@@ -14,6 +17,10 @@
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
+
+#include "Packet.h"
+#include "PcapFileDevice.h"
+
 
 #include "./utils.h"
 
