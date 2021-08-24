@@ -14,8 +14,6 @@ int main(int argc, char* argv[])
     //sudo ifconfig can0 up
 
     try {
-        
-        bool flag = false;
 
         // Declare command line (generic) options 
         po::options_description generic("Generic options");
@@ -29,7 +27,11 @@ int main(int argc, char* argv[])
             ("command", po::value<string>(), "Desired command (send, receive)")
             ("id", po::value<int>(), "Message id (eg: 123)")
             ("message,m", po::value<string>() ,"Message data in hex (eg: \"DEADBEEF\")")
-            ("cyclic,C", po::bool_switch(&flag), "[opt] cyclic messaging")
+            ("cyclic,C", po::value<double>()->notifier([](double v){ 
+                if(v < 1.0 || v > 5.0){ 
+                    throw po::validation_error(po::validation_error::invalid_option_value, "cyclic", to_string(v));
+                }
+            }) , "[opt] Cyclic messaging [1,5]")
         ;
         
         // Declare the positional options
@@ -55,7 +57,7 @@ int main(int argc, char* argv[])
             if(cmd=="send"){
                  
                 if(vm.count("id")&&vm.count("message")){
-                    run(SEND_CMD, vm["id"].as<int>(), vm["message"].as<string>());
+                    run(SEND_CMD, vm["id"].as<int>(), vm["message"].as<string>(), vm.count("cyclic") ? vm["cyclic"].as<double>() : -1);
                     return 0;
                 }
                 cout << "Missing id or message data parameter." << endl;

@@ -7,7 +7,6 @@ string hex_to_ascii(const string& hex){
     for (size_t i = 0; i < hex.length(); i += 2)
     {
         string part = hex.substr(i, 2);
-        cout << part << endl;
         char ch = stoul(part, nullptr, 16);
         ascii += ch;
     }
