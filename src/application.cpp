@@ -6,7 +6,7 @@ using namespace std;
 #define SEND_CMD 0
 
 int skt;
-pcpp::PcapFileWriterDevice pcapWriter("output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
+pcpp::PcapFileWriterDevice pcapWriter("./logs/output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
 
 void run(int cmd,int id, string message, double interval){
 

@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
         
         // Declare the positional options
         po::positional_options_description p;
-        p.add("command", -1);
+        p.add("command", 1);
 
 
         po::options_description visible("Allowed options");
@@ -45,7 +45,8 @@ int main(int argc, char* argv[])
         po::variables_map vm;
         po::store(po::command_line_parser(argc, argv).
                     options(visible).positional(p).run(), vm);
-        po::notify(vm);  
+        po::store(po::parse_config_file("example.cfg", visible), vm);
+        po::notify(vm);
     
         if (vm.count("help")) {
             cout << visible << endl;
