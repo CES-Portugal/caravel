@@ -4,57 +4,44 @@ using namespace std;
 
 #define RECEIVE_CMD 1
 #define SEND_CMD 0
-#define MSG_SENT 10
-#define MSG_RCV 5
+
+int skt;
+pcpp::PcapFileWriterDevice pcapWriter("output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
 
 void run(int cmd,int id, string message, double interval){
 
-    int s;
-    
     if(!valid_hex_str(message)) {
         cout << "Invalid message input!" << endl;
         return;
     }
 
-    if (setup_socket(s)) return;    
+    if (setup_socket()) return;
+    setup_signals();
 
-    //(Sender)
-    //Disable filtering rules, do not receive packets, only send
-    /* setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, NULL, 0); */
-    
-    //(Reciver)
-    //Define receive rules
-    /* 
-    struct can_filter rfilter[1];
-    rfilter[0].can_id = 0x123;
-    rfilter[0].can_mask = CAN_SFF_MASK; 
-    setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
-    */  
-
-    if(cmd == SEND_CMD) run_send(s, id, message, interval);
-    else if(cmd == RECEIVE_CMD) run_receive(s);
+    if(cmd == SEND_CMD) run_send(id, message, interval);
+    else if(cmd == RECEIVE_CMD) run_receive();
 
     //Close the socket and can0
-    close(s);
+    close(skt);
     return;
 }
 
-int setup_socket(int& fd){
+int setup_socket(){
 
     int ret;
     struct ifreq ifr;
     struct sockaddr_can addr;
 
     //Create socket
-    fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-    if (fd < 0) {
+    skt = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    if (skt < 0) {
         perror("socket PF_CAN failed");
         return 1;
     }
 
     //Specify can0 device
     strcpy(ifr.ifr_name, "can0");
-    ret = ioctl(fd, SIOCGIFINDEX, &ifr);
+    ret = ioctl(skt, SIOCGIFINDEX, &ifr);
     if (ret < 0) {
         perror("ioctl failed");
         return 1;
@@ -63,7 +50,7 @@ int setup_socket(int& fd){
     //Bind the socket to can0
     addr.can_family = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
-    ret = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
+    ret = bind(skt, (struct sockaddr *)&addr, sizeof(addr));
     if (ret < 0) {
         perror("bind failed");
         return 1;
@@ -72,7 +59,7 @@ int setup_socket(int& fd){
     return 0;
 }
 
-void run_send(const int& fd,const int& id,const string& message, const int& interval){
+void run_send(const int& id,const string& message, const int& interval){
     int nbytes;
     int n_msg = 0;
     struct can_frame frame;
@@ -94,29 +81,27 @@ void run_send(const int& fd,const int& id,const string& message, const int& inte
     printf("can_data = %s\r\n", frame.data);
     
     //Send messages
-    while (n_msg < MSG_SENT)
+    while (n_msg >= 0)
     {
-        nbytes = write(fd, &frame, sizeof(struct can_frame)); 
+        nbytes = write(skt, &frame, sizeof(struct can_frame)); 
         if(nbytes != sizeof(struct can_frame)) {
             printf("Send Error frame[0]!\r\n");
             return;
         }
         cout << "Sent message: " << n_msg << endl;
 
-        interval != -1 ? usleep(interval*pow(10.0,6)) : n_msg=MSG_SENT;
+        interval != -1 ? usleep(interval*pow(10.0,6)) : n_msg=-2;
         n_msg++;
     }
 }
 
-void run_receive(const int& fd){
+void run_receive(){
     int nbytes;
     int n_msg = 0;
     struct can_frame frame;
     struct timespec time;
     chrono::steady_clock::time_point start = chrono::steady_clock::now();
 
-    //Create output file as pcap format
-    pcpp::PcapFileWriterDevice pcapWriter("output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
     if (!pcapWriter.open())
 	{
 		printf("Cannot open output.pcap for writing\n");
@@ -126,9 +111,9 @@ void run_receive(const int& fd){
 
     cout << "Receiving Data:\n";
 
-    while (n_msg < MSG_RCV)
+    while (1)
     {
-        nbytes = read(fd, &frame, sizeof(frame));
+        nbytes = read(skt, &frame, sizeof(frame));
         
         if (nbytes > 0)
         {

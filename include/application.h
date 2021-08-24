@@ -18,19 +18,16 @@
 #include <linux/can.h>
 #include <linux/can/raw.h>
 
-#include "Packet.h"
-#include "PcapFileDevice.h"
-
-
 #include "./utils.h"
+#include "./signal.h"
 
 void run(int cmd,int id=0, std::string message="", double interval=-1);
 
-void run_send(const int& fd,const int& id,const std::string& message, const int& interval);
+void run_send(const int& id,const std::string& message, const int& interval);
 
-void run_receive(const int& fd);
+void run_receive();
 
-int setup_socket(int& fd);
+int setup_socket();
 
 void elapsed_time(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end,timespec& time);
 
