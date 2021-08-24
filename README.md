@@ -13,4 +13,4 @@ To run this project, just run the binary caravel file:
 ```
 $ ./caravel --help
 ```
-All the commands available will be displayed.
+All the available commands will be displayed.
