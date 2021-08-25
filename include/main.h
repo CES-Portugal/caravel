@@ -6,6 +6,7 @@
 #include <boost/program_options.hpp>
 
 #include "./application.h"
+#include "./actors.h"
 
 
 /**

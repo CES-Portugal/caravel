@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
         // Declare the supported options on the command line and file
         po::options_description config("Configuration");
         config.add_options()
-            ("command", po::value<string>(), "Desired command (send, receive)")
+            ("command", po::value<string>(), "Desired command (send, receive, interactive)")
             ("id", po::value<int>(), "Message id (eg: 123)")
             ("message,m", po::value<string>() ,"Message data in hex (eg: \"DEADBEEF\")")
             ("cyclic,C", po::value<double>()->notifier([](double v){ 
@@ -68,6 +68,13 @@ int main(int argc, char* argv[])
             if(cmd=="receive"){                
                 run(RECEIVE_CMD);
                 return 0;
+            }
+
+            if(cmd=="interactive"){                
+                cout << "Interactive task!\n" << endl;
+                caf::exec_main_init_meta_objects<>();                           
+                caf::core::init_global_meta_objects();                                     
+                return caf::exec_main<>(caf_main, argc, argv);
             }
             
             cout << "Invalid command option" << endl;

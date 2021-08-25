@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.13)
 project(caravel)
 
-add_definitions("-std=c++11")
+add_definitions("-std=c++17")
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+
+set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -latomic")
+
 conan_basic_setup()
 
-add_executable(caravel src/main.cpp src/application.cpp src/utils.cpp src/signal.cpp)
+add_executable(caravel src/main.cpp src/application.cpp src/utils.cpp src/signal.cpp src/actors.cpp)
 target_link_libraries(caravel ${CONAN_LIBS})
 
