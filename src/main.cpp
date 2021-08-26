@@ -72,9 +72,7 @@ int main(int argc, char* argv[])
 
             if(cmd=="interactive"){                
                 cout << "Interactive task!\n" << endl;
-                caf::exec_main_init_meta_objects<>();                           
-                caf::core::init_global_meta_objects();                                     
-                return caf::exec_main<>(caf_main, argc, argv);
+                return run_interactive();
             }
             
             cout << "Invalid command option" << endl;

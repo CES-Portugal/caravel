@@ -3,8 +3,8 @@
 using namespace std;
 using namespace caf;
 
-
-/* behavior mirror(event_based_actor* self) {
+/* 
+behavior mirror(event_based_actor* self) {
     // return the (initial) actor behavior
     return {
         // a handler for messages containing a single string
@@ -77,29 +77,43 @@ void change_v(event_based_actor* self,const actor& buddy) {
     // send "Hello World!" to our buddy ...
     self->send_exit(buddy, exit_reason::kill);
     self->spawn(send_cyclic_messages, 2, n);
-}
- */
+} */
+
 
 CAF_BEGIN_TYPE_ID_BLOCK(custom_types_1, first_custom_type_id)
 
   CAF_ADD_TYPE_ID(custom_types_1, (can_frame))
+  //CAF_ADD_TYPE_ID(custom_types_1, (pcpp::PcapFileWriterDevice))
 
 CAF_END_TYPE_ID_BLOCK(custom_types_1)
 
-namespace caf{
-    template<>
-    struct inspector_access<can_frame> : inspector_access_base<can_frame> {
-    template <class Inspector>
-    static bool apply(Inspector& f, can_frame& x) {
-        return f.object(x).fields(f.field("can_id", x.can_id),
+template <class Inspector>
+bool inspect(Inspector& f, can_frame& x) {
+  return f.object(x).fields(f.field("can_id", x.can_id),
                                 f.field("can_dlc", x.can_dlc),
                                 f.field("__pad", x.__pad),
                                 f.field("__res0", x.__res0),
                                 f.field("__res1", x.__res1),
                                 f.field("data", x.data));
-    }
-    };
+                                
 }
+/* template <class Inspector>
+bool inspect(Inspector& f, pcpp::PcapFileWriterDevice& x) {
+    auto get_stats = [&x]() -> decltype(auto) { PcapStats stats; x.getStatistics(stats); return stats; };
+    auto set_stats = [&x]() {
+        return true;
+    };
+    return f.object(x).fields(f.field("stats", get_stats, set_stats));
+} */
+/* template <class Inspector>
+bool inspect(Inspector& f, chrono::time_point& x) {
+  return f.object(x).fields(f.field("duration", x.duration),
+                                f.field("rep", x.rep),
+                                f.field("period", x.period),
+                                f.field("clock", x.clock));
+                                
+} */
+
 int setup_socket(int& skt){
     int ret;
     struct ifreq ifr;
@@ -131,12 +145,10 @@ int setup_socket(int& skt){
 
     return 0;
 }
-void receive_msg(event_based_actor* self, const int& skt, const actor& buddy){
+
+void receive_msg(event_based_actor* self, const int& skt, const group& g1){
     int nbytes;
-    int n_msg = 0;
     struct can_frame frame;
-    struct timespec time;
-    chrono::steady_clock::time_point start = chrono::steady_clock::now();
 
     cout << "Receiving Data:\n";
     while (1)
@@ -145,35 +157,16 @@ void receive_msg(event_based_actor* self, const int& skt, const actor& buddy){
         
         if (nbytes > 0)
         {
-            if(n_msg==0) {
-                auto elapsed_nsec = chrono::duration_cast<chrono::nanoseconds>(start - start).count();
-                auto elapsed_sec = chrono::duration_cast<chrono::seconds>(start - start).count();
-
-                time.tv_sec = elapsed_sec;
-                time.tv_nsec = elapsed_nsec - (elapsed_sec*pow(10.0,9.0));
-                start = chrono::steady_clock::now();
-            }
-            else{
-                chrono::steady_clock::time_point end = chrono::steady_clock::now();
-                auto elapsed_nsec = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-                auto elapsed_sec = chrono::duration_cast<chrono::seconds>(end - start).count();
-
-                time.tv_sec = elapsed_sec;
-                time.tv_nsec = elapsed_nsec - (elapsed_sec*pow(10.0,9.0));
-                
-            }
-            
-            self->request(buddy,chrono::seconds(3),frame);
+            self->send(g1,frame);
             nbytes=0;
         }
-        n_msg++;
     }
     close(skt);
 }
 
-behavior log_message(event_based_actor* self) {
+behavior output_message(event_based_actor* self) {
     return {
-        [](can_frame frame) {
+        [](const can_frame& frame) {
             //Output message
             printf("can_id = 0x%X\r\ncan_dlc = %d \r\n", frame.can_id, frame.can_dlc);
             int i = 0;
@@ -184,16 +177,62 @@ behavior log_message(event_based_actor* self) {
     };
 }
 
+void time_passed(chrono::steady_clock::time_point start, chrono::steady_clock::time_point end,timespec& time){
+    auto elapsed_nsec = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+    auto elapsed_sec = chrono::duration_cast<chrono::seconds>(end - start).count();
+
+    time.tv_sec = elapsed_sec;
+    time.tv_nsec = elapsed_nsec - (elapsed_sec*pow(10.0,9.0));
+}
+
+behavior log_message(event_based_actor* self,int n_msg){
+    
+    struct timespec time;
+    chrono::steady_clock::time_point start=chrono::steady_clock::now();
+
+    pcpp::PcapFileWriterDevice pcapWriter("./logs/output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
+
+    auto setup_vars = [&] {
+        if (!pcapWriter.open())
+        {
+            printf("Cannot open output.pcap for writing\n");
+            exit(1);
+        }
+    };
+    return {
+        [&](const can_frame& frame) {
+            if (n_msg == 0){
+                setup_vars();
+                time_passed(start, start, time);
+                start = chrono::steady_clock::now();
+            }
+            else{
+                chrono::steady_clock::time_point end = chrono::steady_clock::now();
+                time_passed(start, end, time);
+            }
+            pcpp::RawPacket rawPacket(frame.data, frame.can_dlc, time,false, pcpp::LINKTYPE_CAN_SOCKETCAN);
+            pcapWriter.writePacket(rawPacket);
+            log_message(self, n_msg+1);
+            //MISING CLOSE PCAPWRITER
+        }
+    };
+}
+
 
 void caf_main(actor_system& sys) {
     int skt;
 
     if (setup_socket(skt)) return;
-    
-    auto logger = sys.spawn(log_message);
-    auto receiver = sys.spawn(receive_msg, skt, logger); 
 
-    /* auto cyclic_actor = sys.spawn(send_cyclic_messages, 1, 1);
+    auto grp = sys.groups().get_local("receiver");
+
+    auto output_act = sys.spawn_in_groups({grp}, output_message);
+    auto log_act = sys.spawn_in_groups({grp}, log_message, 0);
+
+    auto receiver = sys.spawn(receive_msg, skt, grp);
+
+
+/*     auto cyclic_actor = sys.spawn(send_cyclic_messages, 1, 1);
     sys.spawn(change_v, cyclic_actor);
 
     // create a new actor that calls 'mirror()'
@@ -206,4 +245,10 @@ void caf_main(actor_system& sys) {
     // the system will wait until both actors are done before exiting the program
     scoped_actor self{sys};
     self->send_exit(calc_actor, exit_reason::kill); */
+}
+
+int run_interactive(){
+    caf::exec_main_init_meta_objects<id_block::custom_types_1>();                           
+    caf::core::init_global_meta_objects();                                     
+    return caf::exec_main<id_block::custom_types_1>(caf_main, 0, {});
 }

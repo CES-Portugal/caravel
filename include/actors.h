@@ -13,8 +13,16 @@
 #include <linux/can.h>
 #include <linux/can/raw.h>
 
+#include "Packet.h"
+#include "PcapFileDevice.h"
+#include <time.h>
+#include <chrono>
+#include <math.h>
+
 #include "./utils.h"
 
 void caf_main(caf::actor_system& sys);
+
+int run_interactive();
 
 #endif  // ACTORS_H_
