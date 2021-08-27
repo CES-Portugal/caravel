@@ -98,6 +98,11 @@ bool inspect(Inspector& f, can_frame& x) {
                                 
 }
 /* template <class Inspector>
+bool inspect(Inspector& f, PcapFileWriterDevice& x) {
+	return f.object(x).fields(f.field("linkLayerType", x.linkLayerType),
+							  f.field("fileName", x.fileName));
+} */
+/* template <class Inspector>
 bool inspect(Inspector& f, pcpp::PcapFileWriterDevice& x) {
     auto get_stats = [&x]() -> decltype(auto) { PcapStats stats; x.getStatistics(stats); return stats; };
     auto set_stats = [&x]() {
@@ -146,43 +151,43 @@ int setup_socket(int& skt){
     return 0;
 }
 
+//Receiving messages
 void receive_msg(event_based_actor* self, const int& skt, const group& g1){
     int nbytes;
     struct can_frame frame;
 
-    cout << "Receiving Data:\n";
-    while (1)
+    aout(self) << "Actor nº: "<< self->id() <<". Is reading data from socket!\n";
+    //while (1)
     {
         nbytes = read(skt, &frame, sizeof(frame));
-        
+
         if (nbytes > 0)
         {
             self->send(g1,frame);
+            //self->send(g1,12);  //Test purposes
             nbytes=0;
         }
     }
     close(skt);
+    self->send_exit(g1, exit_reason::normal);
 }
 
 behavior output_message(event_based_actor* self) {
     return {
-        [](const can_frame& frame) {
+        [&](const can_frame& frame) {
             //Output message
-            printf("can_id = 0x%X\r\ncan_dlc = %d \r\n", frame.can_id, frame.can_dlc);
+            printf("can_id  = 0x%X\r\ncan_dlc = %d \r\n", frame.can_id, frame.can_dlc);
+            //aout(self) << "can_id = 0x" << setbase(16) <<  frame.can_id << "\r\ncan_dlc = "<< frame.can_dlc << " \r\n";
             int i = 0;
             for (i = 0; i < 8; i++)
-                printf("data[%d] = %d\r\n", i, frame.data[i]);
+                aout(self) << "data[" << i << "] = "<< frame.data[i] <<"\r\n";
             
         },
+        [](const int& frame) {
+            //Output message
+            printf("number = %d \r\n", frame);
+        },
     };
-}
-
-void time_passed(chrono::steady_clock::time_point start, chrono::steady_clock::time_point end,timespec& time){
-    auto elapsed_nsec = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-    auto elapsed_sec = chrono::duration_cast<chrono::seconds>(end - start).count();
-
-    time.tv_sec = elapsed_sec;
-    time.tv_nsec = elapsed_nsec - (elapsed_sec*pow(10.0,9.0));
 }
 
 behavior log_message(event_based_actor* self,int n_msg){
@@ -203,18 +208,85 @@ behavior log_message(event_based_actor* self,int n_msg){
         [&](const can_frame& frame) {
             if (n_msg == 0){
                 setup_vars();
-                time_passed(start, start, time);
+                elapsed_time(start, start, time);
                 start = chrono::steady_clock::now();
             }
             else{
                 chrono::steady_clock::time_point end = chrono::steady_clock::now();
-                time_passed(start, end, time);
+                elapsed_time(start, end, time);
             }
             pcpp::RawPacket rawPacket(frame.data, frame.can_dlc, time,false, pcpp::LINKTYPE_CAN_SOCKETCAN);
             pcapWriter.writePacket(rawPacket);
             log_message(self, n_msg+1);
             //MISING CLOSE PCAPWRITER
+        },
+        [&](const int& frame) {
+            printf("number = %d \r\n", frame);
+            if (n_msg == 0){
+                setup_vars();
+                elapsed_time(start, start, time);
+                start = chrono::steady_clock::now();
+            }
+            else{
+                chrono::steady_clock::time_point end = chrono::steady_clock::now();
+                elapsed_time(start, end, time);
+            }
+            const uint8_t* aptr;
+            pcpp::RawPacket rawPacket(aptr, 2, time,false, pcpp::LINKTYPE_CAN_SOCKETCAN);
+            pcapWriter.writePacket(rawPacket);
+            log_message(self, n_msg+1);
+            //MISING CLOSE PCAPWRITER
+        },
+    };
+}
+
+//Sending messages
+void delegate_send_msg(event_based_actor* self, const actor& send_act){
+
+    aout(self) << "Actor nº: "<< self->id() <<". Is waitting for input!\n";
+    
+    struct can_frame frame;
+    string line;
+
+    while (getline(cin, line)) {
+        stringstream str_stream(line);
+
+        string aux, id, msgAscii;
+        str_stream >> aux >> id >> msgAscii;
+
+        if(!valid_hex_str(msgAscii)) {
+            aout(self) << "Invalid message input!" << endl;
+            continue;
         }
+
+        frame.can_id = stoi(id, 0, 16);
+        msgAscii = hex_to_ascii(msgAscii);
+        frame.can_dlc = msgAscii.size();
+        strcpy((char*)frame.data,msgAscii.c_str());
+
+        //Output message details
+        printf("\nMessage details:\n");
+        printf("can_id  = 0x%X\r\n", frame.can_id);
+        printf("can_dlc = %d\r\n", frame.can_dlc);
+        printf("can_data = %s\r\n", frame.data);
+
+        self->send(send_act, frame);
+    }
+
+}
+
+behavior send_message(event_based_actor* self, const int& skt){
+    return {
+        [&](const can_frame& frame) {
+            int nbytes;
+            nbytes = write(skt, &frame, sizeof(struct can_frame)); 
+            if(nbytes != sizeof(struct can_frame)) {
+                printf("Send Error!\r\n");
+                self->quit();
+            }
+            //aout(self) << "Message sent with success!\n";
+            cout  << "Message sent with success!\n\n";;
+        },
     };
 }
 
@@ -228,8 +300,10 @@ void caf_main(actor_system& sys) {
 
     auto output_act = sys.spawn_in_groups({grp}, output_message);
     auto log_act = sys.spawn_in_groups({grp}, log_message, 0);
+    auto send_act = sys.spawn(send_message, skt);
 
     auto receiver = sys.spawn(receive_msg, skt, grp);
+    auto sender = sys.spawn(delegate_send_msg, send_act);
 
 
 /*     auto cyclic_actor = sys.spawn(send_cyclic_messages, 1, 1);

@@ -2,6 +2,7 @@
 #define ACTORS_H_
 
 #include <iostream>
+#include <iomanip>
 
 #include "caf/all.hpp"
 
@@ -15,9 +16,6 @@
 
 #include "Packet.h"
 #include "PcapFileDevice.h"
-#include <time.h>
-#include <chrono>
-#include <math.h>
 
 #include "./utils.h"
 

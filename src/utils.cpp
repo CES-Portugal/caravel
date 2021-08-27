@@ -13,12 +13,19 @@ string hex_to_ascii(const string& hex){
     return ascii;
 }
 
-bool valid_hex_str(const std::string& str){
-
+bool valid_hex_str(const std::string& str){   
     if (str.length()>16 || str.length()%2!=0) return false;
     for (size_t i = 0; i < str.length(); i++)
     {
         if(!isxdigit(str[i])) return false;
     }
     return true;
+}
+
+void elapsed_time(chrono::steady_clock::time_point start, chrono::steady_clock::time_point end,timespec& time){
+    auto elapsed_nsec = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+    auto elapsed_sec = chrono::duration_cast<chrono::seconds>(end - start).count();
+
+    time.tv_sec = elapsed_sec;
+    time.tv_nsec = elapsed_nsec - (elapsed_sec*pow(10.0,9.0));
 }

@@ -7,8 +7,6 @@
 #include <string.h>
 #include <sstream>
 #include <time.h>
-#include <chrono>
-#include <math.h>
 
 #include <unistd.h>
 #include <net/if.h>
@@ -29,6 +27,6 @@ void run_receive();
 
 int setup_socket();
 
-void elapsed_time(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end,timespec& time);
+//void elapsed_time(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end,timespec& time);
 
 #endif  // APPLICATION_H_

@@ -141,11 +141,3 @@ void run_receive(){
     pcapWriter.close();
 }
 
-void elapsed_time(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end,timespec& time){
-    auto elapsed_nsec = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-    auto elapsed_sec = chrono::duration_cast<chrono::seconds>(end - start).count();
-
-    time.tv_sec = elapsed_sec;
-    time.tv_nsec = elapsed_nsec - (elapsed_sec*pow(10.0,9.0));
-}
-
