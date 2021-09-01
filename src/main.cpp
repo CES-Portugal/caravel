@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
         po::variables_map vm;
         po::store(po::command_line_parser(argc, argv).
                     options(visible).positional(p).run(), vm);
-        po::store(po::parse_config_file("example.cfg", visible), vm);
+        po::store(po::parse_config_file("./test/caravel_command_ex.cfg", visible), vm);
         po::notify(vm);
     
         if (vm.count("help")) {

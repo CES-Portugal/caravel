@@ -148,8 +148,8 @@ behavior log_message(event_based_actor* self, const bool& rcv_msg, const chrono:
 
             elapsed_time(start, end, time);
                 
-            /* pcpp::RawPacket rawPacket(frame.data, frame.can_dlc, time,false, pcpp::LINKTYPE_CAN_SOCKETCAN);
-            pcapWriter.writePacket(rawPacket); */
+            pcpp::RawPacket rawPacket(frame.data, frame.can_dlc, time,false, pcpp::LINKTYPE_CAN_SOCKETCAN);
+            //pcapWriter.writePacket(rawPacket);
             aout(self) << time.tv_sec << endl;
             if(!rcv_msg) self->become(log_message(self, true, chrono::steady_clock::now()));
             //MISING CLOSE PCAPWRITER
@@ -176,7 +176,7 @@ behavior output_message(event_based_actor* self) {
 //Sending messages
 void delegate_send_msg(event_based_actor* self, const group& grp){
 
-    aout(self) << "Actor nº: "<< self->id() <<". Is waitting for input!" << endl;
+    aout(self) << "Actor nº: "<< self->id() <<". Is waiting for input!" << endl;
     
     struct can_frame frame;
     string line;
@@ -218,6 +218,38 @@ behavior send_message(event_based_actor* self, const int& skt){
     };
 }
 
+//Read from file
+void parse_send_file(event_based_actor* self, const group& grp){
+    aout(self) << "Actor nº: "<< self->id() <<". Is waiting for file path:" << endl;
+    
+    ifstream file;
+    string file_path;
+
+    while(getline(cin, file_path)){
+
+    }
+    struct can_frame frame;
+    string line;
+
+    while (getline(cin, line)) {
+        stringstream str_stream(line);
+
+        string aux, id, msgAscii;
+        str_stream >> aux >> id >> msgAscii;
+
+        if(!valid_hex_str(msgAscii)) {
+            aout(self) << "Invalid message input!" << endl;
+            continue;
+        }
+
+        frame.can_id = stoi(id, 0, 16);
+        msgAscii = hex_to_ascii(msgAscii);
+        frame.can_dlc = msgAscii.size();
+        strcpy((char*)frame.data,msgAscii.c_str());
+        
+        self->send(grp, frame);
+    }
+}
 
 void caf_main(actor_system& sys) {
     int skt;
@@ -234,6 +266,7 @@ void caf_main(actor_system& sys) {
 
     auto receiver = sys.spawn(receive_msg, skt, rcv_grp);
     auto sender = sys.spawn(delegate_send_msg, send_grp);
+    //auto parser = sys.spawn(parse_send_file, send_grp);
 
 /*  scoped_actor self{sys};
     self->send_exit(calc_actor, exit_reason::kill); */

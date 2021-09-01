@@ -73,8 +73,8 @@ void run_send(const int& id,const string& message, const int& interval){
     msgAscii = hex_to_ascii(message);
     frame.can_dlc = msgAscii.size();
 
-    strcpy((char*)frame.data,msgAscii.c_str()); //Different function
-    //sprintf(frame.data,"%u",msgAscii.c_str());
+    strcpy((char*)frame.data,msgAscii.c_str());
+
     printf("Message details:\n");
     printf("can_id  = 0x%X\r\n", frame.can_id);
     printf("can_dlc = %d\r\n", frame.can_dlc);
