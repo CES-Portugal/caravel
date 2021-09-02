@@ -6,7 +6,6 @@ using namespace std;
 #define RECEIVE_CMD 1
 #define SEND_CMD 0
 
-/* main.c  */
 int main(int argc, char* argv[])
 {
 

@@ -13,7 +13,7 @@ string hex_to_ascii(const string& hex){
     return ascii;
 }
 
-bool valid_hex_str(const std::string& str){   
+bool valid_hex_str(const string& str){   
     if (str.length()>16 || str.length()%2!=0) return false;
     for (size_t i = 0; i < str.length(); i++)
     {

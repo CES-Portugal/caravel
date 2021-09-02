@@ -1,6 +1,0 @@
-send 123 beef
-send 124 beeeef
-send 125 beeeeeff
-send 126 beef
-send 127 beefff
-send 128 beefef
