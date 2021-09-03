@@ -28,10 +28,12 @@ behavior send_message(event_based_actor* self, const int& skt){
             nbytes = write(skt, &frame, sizeof(struct can_frame)); 
             if(nbytes != sizeof(struct can_frame)) {
                 aout(self) << "Send Message Error!\r" << endl;
+                self->quit();
                 return;
             }
             
             aout(self) << "Message sent with success!\n" << endl;
+            self->quit();
         },
     };
 }

@@ -20,8 +20,15 @@ bool inspect(Inspector& f, can_frame& x) {
                                 
 }
 
-behavior log_message(event_based_actor* self, bool rcv_msg, const chrono::steady_clock::time_point& start){
 
+
+void lexit_handler(scheduled_actor* self) {
+    self->attach_functor([=](const error& reason) {
+        aout(self) << "\nEnding Caravel!"<< endl;
+    });
+}
+behavior log_message(event_based_actor* self, bool rcv_msg, const chrono::steady_clock::time_point& start){
+    lexit_handler(self);
     //pcpp::PcapFileWriterDevice pcapWriter("./logs/output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
 
     auto setup_vars = [&, self] {
@@ -46,7 +53,7 @@ behavior log_message(event_based_actor* self, bool rcv_msg, const chrono::steady
                 
             pcpp::RawPacket rawPacket(frame.data, frame.can_dlc, time,false, pcpp::LINKTYPE_CAN_SOCKETCAN);
             //pcapWriter.writePacket(rawPacket);
-            
+            aout(self) << "Pcap logger" << endl;
             if(!rcv_msg) self->become(log_message(self, true, chrono::steady_clock::now()));
             //MISING CLOSE PCAPWRITER
         },

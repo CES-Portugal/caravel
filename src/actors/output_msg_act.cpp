@@ -30,7 +30,9 @@ behavior output_message(event_based_actor* self) {
             aout(self) << "\nMessage details:" << endl;
             aout(self) << "can_id  = 0x" << sstream.str() <<" \r" << endl;
             aout(self) << "can_dlc = " << frame.can_dlc << " \r" << endl;
-            aout(self) << "can_data = " << frame.data << " \r" << endl;
+            aout(self) << "can_data = " << frame.data << " \r\n" << endl;
+
+            self->quit();
         },
     };
 }

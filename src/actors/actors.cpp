@@ -112,17 +112,8 @@ void caf_main(actor_system& sys) {
 
     auto rcv_grp = sys.groups().get_local("receiver");
     auto send_grp = sys.groups().get_local("sender");
-
-    auto output_act = sys.spawn_in_groups({rcv_grp, send_grp}, output_message);
-    auto log_act = sys.spawn_in_groups({rcv_grp}, log_message, false, chrono::steady_clock::now());
-    auto send_act = sys.spawn_in_groups({send_grp}, send_message, skt);
-
-    auto file_parser = sys.spawn(parse_send_file, send_grp);
     
-    //auto receiver = sys.spawn(receive_msg, skt, rcv_grp);
-    
-    auto input_act = sys.spawn(parse_input, file_parser, send_grp);
-    //auto sender = sys.spawn(delegate_send_msg, send_grp);
+    auto input_act = sys.spawn(parse_input, rcv_grp, send_grp, skt);
 
 
 /*  scoped_actor self{sys};

@@ -20,10 +20,17 @@ bool inspect(Inspector& f, can_frame& x) {
                                 
 }
 
+void rexit_handler(scheduled_actor* self) {
+    self->attach_functor([=](const error& reason) {
+        aout(self) << "\nEnding Caravel!"<< endl;
+    });
+}
 //Receiving messages
 void receive_msg(event_based_actor* self, const int& skt, const group& grp){
+    rexit_handler(self);
     int nbytes;
     struct can_frame frame;
+    self->spawn_in_groups({grp}, log_message, false, chrono::steady_clock::now());
 
     aout(self) << "Actor nº: "<< self->id() <<". Is reading data from socket!" << endl;
     while (1)
@@ -32,10 +39,9 @@ void receive_msg(event_based_actor* self, const int& skt, const group& grp){
 
         if (nbytes > 0)
         {
+            self->spawn_in_groups({grp}, output_message);
             self->send(grp,frame);
             nbytes=0;
         }
     }
-    close(skt);
-    self->send_exit(grp, exit_reason::normal);
 }

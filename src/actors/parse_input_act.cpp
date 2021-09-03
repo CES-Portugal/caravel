@@ -20,10 +20,10 @@ bool inspect(Inspector& f, can_frame& x) {
                                 
 }
 
-void parse_input(event_based_actor* self, const actor& file_parser, const group& send_grp){
+void parse_input(event_based_actor* self, const group& rcv_grp, const group& send_grp, const int& skt){
     string line;
-
-    aout(self) << "\nActor nº: "<< self->id() <<". Is waiting for input:\n" << endl;
+    bool receiving=false;
+    aout(self) << "\nActor nº: "<< self->id() <<". Is ready for input:\n" << endl;
 
     while (getline(cin, line)) {
 
@@ -32,53 +32,40 @@ void parse_input(event_based_actor* self, const actor& file_parser, const group&
         string command;
         str_stream >> command;
         
-        if(command == "parse") {
-            string path;
-            str_stream >> path;
-            self->request(file_parser, chrono::seconds(3), path)
-                .await(
-                    [=](int res) {
-                        if(!res) aout(self) << "File parsed successfully!" << endl;
-                    }
-                );
-            continue;
+        if(command == "receive"){
+            if(receiving){
+                aout(self) << "\nAlready reading from socket!\n" << endl;
+                continue;
+            }
+            auto receiver = self->spawn(receive_msg, skt, rcv_grp);
+            self->link_to(receiver);
+            receiving=true;
         } 
-        
-        if(command == "send") {
+        else if(command == "send") {
             struct can_frame frame;
-            string id, msgAscii;
 
-            str_stream >> id >> msgAscii;
-
-            if(!valid_hex_str(msgAscii)) {
+            if(str_to_frame(str_stream.str(), frame)) {
                 aout(self) << "Invalid message input!" << endl;
                 continue;
             }
 
-            frame.can_id = stoi(id, 0, 16);
-            msgAscii = hex_to_ascii(msgAscii);
-            frame.can_dlc = msgAscii.size();
-            strcpy((char*)frame.data,msgAscii.c_str());
-            
+            self->spawn_in_groups({send_grp}, send_message, skt);
+            self->spawn_in_groups({send_grp}, output_message);
             self->send(send_grp, frame);
-            continue;
         }
-        
-        if(command == "simulate") {
+        else if(command == "parse") {
             string path;
             str_stream >> path;
-            self->request(file_parser, chrono::seconds(3), path)
-                .await(
-                    [=](int res) {
-                        if(!res) aout(self) << "File parsed successfully!" << endl;
-                    },
-                    [&](error& err) {
-                        aout(self) << to_string(err) << endl;
-                    });
-            continue;
+
+            auto file_parser = self->spawn(parse_send_file, send_grp, skt);
+            self->send(file_parser, path);
         }
-        
-        if(command == "exit"){
+        /* else if(command == "simulate") {
+            string path;
+            str_stream >> path;
+        } */
+        else if(command == "exit"){
+            self->spawn(exit_act, skt, rcv_grp);
             break;
         }
         else

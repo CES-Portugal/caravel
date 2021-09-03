@@ -29,3 +29,18 @@ void elapsed_time(chrono::steady_clock::time_point start, chrono::steady_clock::
     time.tv_sec = elapsed_sec;
     time.tv_nsec = elapsed_nsec - (elapsed_sec*pow(10.0,9.0));
 }
+
+int str_to_frame(const string& str, struct can_frame& frame){
+    stringstream str_stream(str);
+
+    string aux, id, msgAscii;
+    str_stream >> aux >> id >> msgAscii;
+
+    if(!valid_hex_str(msgAscii)) return 1;
+
+    frame.can_id = stoi(id, 0, 16);
+    msgAscii = hex_to_ascii(msgAscii);
+    frame.can_dlc = msgAscii.size();
+    strcpy((char*)frame.data,msgAscii.c_str());
+    return 0;
+}

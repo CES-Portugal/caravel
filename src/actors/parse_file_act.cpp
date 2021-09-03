@@ -20,7 +20,7 @@ bool inspect(Inspector& f, can_frame& x) {
                                 
 }
 
-behavior parse_send_file(event_based_actor* self, const group& grp){
+behavior parse_send_file(event_based_actor* self, const group& grp, const int& skt){
     return {
         [=](const string& file_path) {
             ifstream file;
@@ -29,33 +29,26 @@ behavior parse_send_file(event_based_actor* self, const group& grp){
 
             if (!file.is_open()){
                 aout(self) << "\nInvalid file path!" << endl;
-                return 1;
+                return;
             }
 
             struct can_frame frame;
             string line;
 
             while (getline(file, line)) {
-                stringstream str_stream(line);
 
-                string aux, id, msgAscii;
-                str_stream >> aux >> id >> msgAscii;
-
-                if(!valid_hex_str(msgAscii)) {
+                if(str_to_frame(line, frame)) {
                     aout(self) << "Invalid message input!" << endl;
                     continue;
                 }
 
-                frame.can_id = stoi(id, 0, 16);
-                msgAscii = hex_to_ascii(msgAscii);
-                frame.can_dlc = msgAscii.size();
-                strcpy((char*)frame.data,msgAscii.c_str());
-                
+                self->spawn_in_groups({grp}, send_message, skt);
+                self->spawn_in_groups({grp}, output_message);
                 self->send(grp, frame);
             }
 
             file.close();
-            return 0;
+            self->quit();
         },
     };
 }
