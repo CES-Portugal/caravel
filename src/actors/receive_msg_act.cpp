@@ -3,6 +3,8 @@
 using namespace std;
 using namespace caf;
 
+#define DELAY 50000
+
 CAF_BEGIN_TYPE_ID_BLOCK(custom_types_1, first_custom_type_id)
 
   CAF_ADD_TYPE_ID(custom_types_1, (can_frame))
@@ -20,28 +22,33 @@ bool inspect(Inspector& f, can_frame& x) {
                                 
 }
 
-void rexit_handler(scheduled_actor* self) {
-    self->attach_functor([=](const error& reason) {
-        aout(self) << "\nEnding Caravel!"<< endl;
-    });
-}
 //Receiving messages
-void receive_msg(event_based_actor* self, const int& skt, const group& grp){
-    rexit_handler(self);
+void receive_msg(event_based_actor* self, const int& skt){
     int nbytes;
     struct can_frame frame;
-    self->spawn_in_groups({grp}, log_message, false, chrono::steady_clock::now());
+    auto msg_logger = self->spawn(log_message, false, chrono::steady_clock::now());
 
     aout(self) << "Actor nº: "<< self->id() <<". Is reading data from socket!" << endl;
     while (1)
     {
         nbytes = read(skt, &frame, sizeof(frame));
 
-        if (nbytes > 0)
-        {
-            self->spawn_in_groups({grp}, output_message);
-            self->send(grp,frame);
-            nbytes=0;
+        if (nbytes < 0){
+            if(errno == EWOULDBLOCK) {
+                usleep(DELAY);
+                continue;
+            }
+            break;
         }
+
+        aout(self) << "Received message!\n" << endl;
+        
+        auto msg_output = self->spawn(output_message);
+        
+        self->send(msg_output,frame);
+        self->send(msg_logger,frame);
+
+        nbytes=0;
     }
+    self->send_exit(msg_logger, exit_reason::kill);
 }

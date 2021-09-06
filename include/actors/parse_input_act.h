@@ -3,14 +3,16 @@
 
 #include <iostream>
 
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+
 #include "caf/all.hpp"
 
-#include "./parse_file_act.h"
-#include "./parse_simulate_act.h"
-#include "./receive_msg_act.h"
-#include "./exit_act.h"
+#include "./parse_simulation_act.h"
 
-void parse_input(caf::event_based_actor* self, const caf::group& rcv_grp, const caf::group& send_grp, const int& skt);
+void parse_input(caf::event_based_actor* self, const caf::group& send_grp);
 
 void parse_input_exit_handler(caf::scheduled_actor* self, const caf::group& grp, const int& skt);
 

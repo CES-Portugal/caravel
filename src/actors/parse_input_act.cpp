@@ -20,9 +20,52 @@ bool inspect(Inspector& f, can_frame& x) {
                                 
 }
 
-void parse_input(event_based_actor* self, const group& rcv_grp, const group& send_grp, const int& skt){
+int setup_socket(int& skt){
+    int ret;
+    struct ifreq ifr;
+    struct sockaddr_can addr;
+
+    //Create socket
+    skt = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    if (skt < 0) {
+        perror("socket PF_CAN failed");
+        return 1;
+    }
+
+    //Specify can0 device
+    strcpy(ifr.ifr_name, "can0");
+    ret = ioctl(skt, SIOCGIFINDEX, &ifr);
+    if (ret < 0) {
+        perror("ioctl failed");
+        return 1;
+    }
+
+    int status = fcntl(skt, F_SETFL, fcntl(skt, F_GETFL, 0) | O_NONBLOCK);
+    if (status == -1){
+        perror("calling fcntl");
+        return 1;
+    }
+
+    //Bind the socket to can0
+    addr.can_family = AF_CAN;
+    addr.can_ifindex = ifr.ifr_ifindex;
+    ret = bind(skt, (struct sockaddr *)&addr, sizeof(addr));
+    if (ret < 0) {
+        perror("bind failed");
+        return 1;
+    }
+
+    return 0;
+}
+
+void parse_input(event_based_actor* self, const group& send_grp){
+    int skt;
     string line;
     bool receiving=false;
+    actor receiver;
+
+    if (setup_socket(skt)) return;
+
     aout(self) << "\nActor nº: "<< self->id() <<". Is ready for input:\n" << endl;
 
     while (getline(cin, line)) {
@@ -37,8 +80,7 @@ void parse_input(event_based_actor* self, const group& rcv_grp, const group& sen
                 aout(self) << "\nAlready reading from socket!\n" << endl;
                 continue;
             }
-            auto receiver = self->spawn(receive_msg, skt, rcv_grp);
-            self->link_to(receiver);
+            receiver = self->spawn(receive_msg, skt);
             receiving=true;
         } 
         else if(command == "send") {
@@ -53,19 +95,18 @@ void parse_input(event_based_actor* self, const group& rcv_grp, const group& sen
             self->spawn_in_groups({send_grp}, output_message);
             self->send(send_grp, frame);
         }
-        else if(command == "parse") {
+        else if(command == "simulate") {
             string path;
             str_stream >> path;
 
-            auto file_parser = self->spawn(parse_send_file, send_grp, skt);
-            self->send(file_parser, path);
+            if (setup_socket(skt)) return;
+
+            auto simulation_parser = self->spawn(parse_simulation, send_grp, skt);
+            self->send(simulation_parser, path);
+            break;
         }
-        /* else if(command == "simulate") {
-            string path;
-            str_stream >> path;
-        } */
         else if(command == "exit"){
-            self->spawn(exit_act, skt, rcv_grp);
+            self->spawn(exit_act, skt);
             break;
         }
         else

@@ -6,6 +6,6 @@
 
 #include "caf/all.hpp"
 
-void exit_act(caf::event_based_actor* self, const int& skt, const caf::group& grp);
+void exit_act(caf::event_based_actor* self, const int& skt);
 
 #endif  // EXIT_ACT_H_

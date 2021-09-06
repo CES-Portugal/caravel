@@ -73,47 +73,11 @@ bool inspect(Inspector& f, chrono::time_point& x) {
                                 
 } */
 
-int setup_socket(int& skt){
-    int ret;
-    struct ifreq ifr;
-    struct sockaddr_can addr;
-
-    //Create socket
-    skt = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-    if (skt < 0) {
-        perror("socket PF_CAN failed");
-        return 1;
-    }
-
-    //Specify can0 device
-    strcpy(ifr.ifr_name, "can0");
-    ret = ioctl(skt, SIOCGIFINDEX, &ifr);
-    if (ret < 0) {
-        perror("ioctl failed");
-        return 1;
-    }
-
-    //Bind the socket to can0
-    addr.can_family = AF_CAN;
-    addr.can_ifindex = ifr.ifr_ifindex;
-    ret = bind(skt, (struct sockaddr *)&addr, sizeof(addr));
-    if (ret < 0) {
-        perror("bind failed");
-        return 1;
-    }
-
-    return 0;
-}
-
 void caf_main(actor_system& sys) {
-    int skt;
-
-    if (setup_socket(skt)) return;
-
-    auto rcv_grp = sys.groups().get_local("receiver");
+    //May not be necessary!!!!!!!!
     auto send_grp = sys.groups().get_local("sender");
     
-    auto input_act = sys.spawn(parse_input, rcv_grp, send_grp, skt);
+    auto input_act = sys.spawn(parse_input, send_grp);
 
 
 /*  scoped_actor self{sys};

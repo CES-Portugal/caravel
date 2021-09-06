@@ -22,13 +22,8 @@ bool inspect(Inspector& f, can_frame& x) {
 
 
 
-void lexit_handler(scheduled_actor* self) {
-    self->attach_functor([=](const error& reason) {
-        aout(self) << "\nEnding Caravel!"<< endl;
-    });
-}
+
 behavior log_message(event_based_actor* self, bool rcv_msg, const chrono::steady_clock::time_point& start){
-    lexit_handler(self);
     //pcpp::PcapFileWriterDevice pcapWriter("./logs/output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
 
     auto setup_vars = [&, self] {

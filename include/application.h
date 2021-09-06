@@ -27,6 +27,4 @@ void run_receive();
 
 int setup_socket();
 
-//void elapsed_time(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end,timespec& time);
-
 #endif  // APPLICATION_H_

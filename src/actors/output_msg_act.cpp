@@ -27,7 +27,7 @@ behavior output_message(event_based_actor* self) {
             sstream << hex << frame.can_id;
             
             //Output message details
-            aout(self) << "\nMessage details:" << endl;
+            aout(self) << "Message details:" << endl;
             aout(self) << "can_id  = 0x" << sstream.str() <<" \r" << endl;
             aout(self) << "can_dlc = " << frame.can_dlc << " \r" << endl;
             aout(self) << "can_data = " << frame.data << " \r\n" << endl;
