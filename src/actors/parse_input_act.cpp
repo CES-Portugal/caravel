@@ -58,7 +58,7 @@ int setup_socket(int& skt){
     return 0;
 }
 
-void parse_input(event_based_actor* self, const group& send_grp){
+void parse_input(event_based_actor* self){
     int skt;
     string line;
     bool receiving=false;
@@ -86,14 +86,25 @@ void parse_input(event_based_actor* self, const group& send_grp){
         else if(command == "send") {
             struct can_frame frame;
 
-            if(str_to_frame(str_stream.str(), frame)) {
+            if(str_to_frame(line, frame)) {
                 aout(self) << "Invalid message input!" << endl;
                 continue;
             }
+            
+            int interval=-1;
+            interval_from_str(line, interval);
 
-            self->spawn_in_groups({send_grp}, send_message, skt);
-            self->spawn_in_groups({send_grp}, output_message);
-            self->send(send_grp, frame);
+            if(interval!=-1.0){
+                //Cyclic message
+                auto cyclic_sender = self->spawn(send_cyclic_message, skt, interval);
+                self->link_to(cyclic_sender);
+                self->send(cyclic_sender, frame);
+                continue;
+            }
+            
+            //Normal message
+            self->send(self->spawn(send_message, skt), frame); 
+            self->send(self->spawn(output_message), frame);
         }
         else if(command == "simulate") {
             string path;
@@ -101,7 +112,7 @@ void parse_input(event_based_actor* self, const group& send_grp){
 
             if (setup_socket(skt)) return;
 
-            auto simulation_parser = self->spawn(parse_simulation, send_grp, skt);
+            auto simulation_parser = self->spawn(parse_simulation, skt);
             self->send(simulation_parser, path);
             break;
         }

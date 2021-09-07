@@ -77,7 +77,7 @@ void caf_main(actor_system& sys) {
     //May not be necessary!!!!!!!!
     auto send_grp = sys.groups().get_local("sender");
     
-    auto input_act = sys.spawn(parse_input, send_grp);
+    auto input_act = sys.spawn(parse_input);
 
 
 /*  scoped_actor self{sys};

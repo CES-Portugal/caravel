@@ -44,3 +44,22 @@ int str_to_frame(const string& str, struct can_frame& frame){
     strcpy((char*)frame.data,msgAscii.c_str());
     return 0;
 }
+
+void interval_from_str(const string& str, int& interval){
+    size_t found = str.find("every");
+    
+    if(found==string::npos) return;
+
+    string new_str=str.substr(found);
+
+    string aux, units;
+    double value, multiplier = pow(10.0,6.0);;
+
+    stringstream str_stream(new_str);
+    str_stream >> aux >> value >> units;
+
+    if(units=="sec") multiplier = pow(10.0,6.0);
+    else if (units=="mili") multiplier = pow(10.0,3.0);
+    
+    interval = value*multiplier;
+}

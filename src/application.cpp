@@ -67,8 +67,8 @@ void run_send(const int& id,const string& message, const int& interval){
     string str, msgAscii;
 
     //Set send data  
-    ss << id;  
-    ss >> str; 
+    ss << id;
+    ss >> str;
     frame.can_id = stoi(str, 0, 16);
     msgAscii = hex_to_ascii(message);
     frame.can_dlc = msgAscii.size();

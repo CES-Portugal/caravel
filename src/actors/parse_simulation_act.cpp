@@ -20,9 +20,10 @@ bool inspect(Inspector& f, can_frame& x) {
                                 
 }
 
-behavior parse_simulation(event_based_actor* self, const group& grp, const int& skt){
+behavior parse_simulation(event_based_actor* self, const int& skt){
     return {
         [=](const string& file_path) {
+
             ifstream file;
 
             file.open(file_path);
@@ -40,15 +41,16 @@ behavior parse_simulation(event_based_actor* self, const group& grp, const int& 
             while (getline(file, line)) {
                 string aux=line.substr(0, line.find(" "));
 
+                if(aux=="#") continue;
+
                 if(aux=="send"){
                     if(str_to_frame(line, frame)) {
                         aout(self) << "Invalid message input!" << endl;
                         continue;
                     }
 
-                    self->spawn_in_groups({grp}, send_message, skt);
-                    self->spawn_in_groups({grp}, output_message);
-                    self->send(grp, frame);
+                    self->send(self->spawn(send_message, skt), frame);
+                    self->send(self->spawn(output_message), frame);
                 }
                 else if(aux=="receive"){
                     if(receiving){

@@ -1,2 +1,3 @@
+# command [id] [message] [flag]
 receive
-send 123 ab
+send 123 ab every 1 sec

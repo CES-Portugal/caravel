@@ -12,8 +12,6 @@
 
 #include "./parse_simulation_act.h"
 
-void parse_input(caf::event_based_actor* self, const caf::group& send_grp);
-
-void parse_input_exit_handler(caf::scheduled_actor* self, const caf::group& grp, const int& skt);
+void parse_input(caf::event_based_actor* self);
 
 #endif  // PARSE_INPUT_ACT_H_

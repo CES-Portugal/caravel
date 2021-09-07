@@ -17,4 +17,6 @@ void elapsed_time(std::chrono::steady_clock::time_point start, std::chrono::stea
 
 int str_to_frame(const std::string& str, struct can_frame& frame);
 
+void interval_from_str(const std::string& str, int& interval);
+
 #endif  // UTILS_H_
