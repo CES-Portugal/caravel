@@ -29,10 +29,9 @@ behavior send_cyclic_message(event_based_actor* self,const int& skt,const int& d
             
             std::chrono::microseconds timeout{delay};
             self->delayed_send(self, timeout, frame);
-            //self->quit();
         },
         [&](exit_msg& em) {
-            self->quit();
+            self->quit(exit_reason::user_shutdown);
         },
     };
 }

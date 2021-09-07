@@ -49,6 +49,18 @@ behavior parse_simulation(event_based_actor* self, const int& skt){
                         continue;
                     }
 
+                    int interval=-1;
+                    interval_from_str(line, interval, "every");
+
+                    if(interval!=-1){
+                        //Cyclic message
+                        auto cyclic_sender = self->spawn(send_cyclic_message, skt, interval);
+                        self->link_to(cyclic_sender);
+                        self->send(cyclic_sender, frame);
+                        continue;
+                    }
+
+                    //Normal message
                     self->send(self->spawn(send_message, skt), frame);
                     self->send(self->spawn(output_message), frame);
                 }
@@ -57,7 +69,11 @@ behavior parse_simulation(event_based_actor* self, const int& skt){
                         aout(self) << "\nAlready reading from socket!\n" << endl;
                         continue;
                     }
-                    auto receiver = self->spawn(receive_msg, skt);
+
+                    int interval=-1;
+                    interval_from_str(line, interval, "for");
+
+                    auto receiver = self->spawn(receive_msg, skt, interval);
                     receiving=true;
                 }
             }

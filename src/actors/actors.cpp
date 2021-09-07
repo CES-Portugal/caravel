@@ -80,7 +80,9 @@ void caf_main(actor_system& sys) {
     auto input_act = sys.spawn(parse_input);
 
 
-/*  scoped_actor self{sys};
+    /* scoped_actor self{sys};
+    self->await_all_other_actors_done();
+    aout(self) << "All actors done!" << endl;
     self->send_exit(calc_actor, exit_reason::kill); */
 }
 

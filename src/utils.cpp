@@ -45,8 +45,8 @@ int str_to_frame(const string& str, struct can_frame& frame){
     return 0;
 }
 
-void interval_from_str(const string& str, int& interval){
-    size_t found = str.find("every");
+void interval_from_str(const string& str, int& interval, const string& delimiter){
+    size_t found = str.find(delimiter);
     
     if(found==string::npos) return;
 

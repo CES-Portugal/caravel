@@ -62,9 +62,13 @@ void parse_input(event_based_actor* self){
     int skt;
     string line;
     bool receiving=false;
-    actor receiver;
 
     if (setup_socket(skt)) return;
+
+     self->set_exit_handler([self, &receiving](const exit_msg& msg) {
+        aout(self) << "receiver is down" << endl;
+        receiving = false;
+    });
 
     aout(self) << "\nActor nº: "<< self->id() <<". Is ready for input:\n" << endl;
 
@@ -80,7 +84,12 @@ void parse_input(event_based_actor* self){
                 aout(self) << "\nAlready reading from socket!\n" << endl;
                 continue;
             }
-            receiver = self->spawn(receive_msg, skt);
+
+            int interval=-1;
+            interval_from_str(line, interval, "for");
+
+            auto receiver = self->spawn(receive_msg, skt, interval);
+            self->link_to(receiver);  //Not working yet!!!
             receiving=true;
         } 
         else if(command == "send") {
@@ -92,9 +101,9 @@ void parse_input(event_based_actor* self){
             }
             
             int interval=-1;
-            interval_from_str(line, interval);
+            interval_from_str(line, interval, "every");
 
-            if(interval!=-1.0){
+            if(interval!=-1){
                 //Cyclic message
                 auto cyclic_sender = self->spawn(send_cyclic_message, skt, interval);
                 self->link_to(cyclic_sender);
@@ -123,4 +132,5 @@ void parse_input(event_based_actor* self){
         else
             aout(self) << "Invalid command!" << endl;
     }
+    self->quit(exit_reason::user_shutdown);
 }
