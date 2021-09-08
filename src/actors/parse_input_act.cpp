@@ -58,79 +58,83 @@ int setup_socket(int& skt){
     return 0;
 }
 
-void parse_input(event_based_actor* self){
+behavior parse_input(event_based_actor* self){
+
     int skt;
     string line;
     bool receiving=false;
+    
+    if (setup_socket(skt)) self->quit(exit_reason::kill);
 
-    if (setup_socket(skt)) return;
+    self->set_exit_handler([self, &receiving]
+        (const exit_msg& msg){
+            aout(self) << "receiver is down" << endl;
+            receiving = false;
+        }
+    );
 
-     self->set_exit_handler([self, &receiving](const exit_msg& msg) {
-        aout(self) << "receiver is down" << endl;
-        receiving = false;
-    });
+    self->spawn<detached>(receive_input, self);
 
-    aout(self) << "\nActor nº: "<< self->id() <<". Is ready for input:\n" << endl;
+    return{
+        [=, &receiving](const string& line){
+            stringstream str_stream(line);
 
-    while (getline(cin, line)) {
-
-        stringstream str_stream(line);
-
-        string command;
-        str_stream >> command;
-        
-        if(command == "receive"){
-            if(receiving){
-                aout(self) << "\nAlready reading from socket!\n" << endl;
-                continue;
-            }
-
-            int interval=-1;
-            interval_from_str(line, interval, "for");
-
-            auto receiver = self->spawn(receive_msg, skt, interval);
-            self->link_to(receiver);  //Not working yet!!!
-            receiving=true;
-        } 
-        else if(command == "send") {
-            struct can_frame frame;
-
-            if(str_to_frame(line, frame)) {
-                aout(self) << "Invalid message input!" << endl;
-                continue;
-            }
+            string command;
+            str_stream >> command;
             
-            int interval=-1;
-            interval_from_str(line, interval, "every");
+            if(command=="#") return;
 
-            if(interval!=-1){
-                //Cyclic message
-                auto cyclic_sender = self->spawn(send_cyclic_message, skt, interval);
-                self->link_to(cyclic_sender);
-                self->send(cyclic_sender, frame);
-                continue;
+            if(command == "receive"){
+                if(receiving){
+                    aout(self) << "\nAlready reading from socket!\n" << endl;
+                    return;
+                }
+
+                int interval=-1;
+                interval_from_str(line, interval, "for");
+
+                auto receiver = self->spawn(receive_msg, skt, interval);
+                self->link_to(receiver);  //Not working yet!!!
+                receiving=true;
+            } 
+            else if(command == "send") {
+                struct can_frame frame;
+
+                if(str_to_frame(line, frame)) {
+                    aout(self) << "Invalid message input!" << endl;
+                    return;
+                }
+                
+                int interval=-1;
+                interval_from_str(line, interval, "every");
+
+                if(interval!=-1){
+                    //Cyclic message
+                    auto cyclic_sender = self->spawn(send_cyclic_message, skt, interval);
+                    self->link_to(cyclic_sender);
+                    self->send(cyclic_sender, frame);
+                    return;
+                }
+                
+                //Normal message
+                self->send(self->spawn(send_message, skt), frame); 
+                self->send(self->spawn(output_message), frame);
             }
-            
-            //Normal message
-            self->send(self->spawn(send_message, skt), frame); 
-            self->send(self->spawn(output_message), frame);
-        }
-        else if(command == "simulate") {
-            string path;
-            str_stream >> path;
+            else if(command == "simulate") {
+                string path;
+                str_stream >> path;
 
-            if (setup_socket(skt)) return;
+                //if (setup_socket(skt)) self->quit(exit_reason::kill);
 
-            auto simulation_parser = self->spawn(parse_simulation, skt);
-            self->send(simulation_parser, path);
-            break;
-        }
-        else if(command == "exit"){
-            self->spawn(exit_act, skt);
-            break;
-        }
-        else
-            aout(self) << "Invalid command!" << endl;
-    }
-    self->quit(exit_reason::user_shutdown);
+                auto simulation_parser = self->spawn(parse_simulation, skt, self);
+                self->send(simulation_parser, path);
+            }
+            else if(command == "exit"){
+                self->spawn(exit_act, skt);
+                self->quit(exit_reason::user_shutdown);
+            }
+            else
+                aout(self) << "Invalid command!" << endl;
+            },
+    };
 }

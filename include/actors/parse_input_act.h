@@ -8,10 +8,13 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
-#include "caf/all.hpp"
-
+#include "../utils.h"
+#include "./cyclic_msg_act.h"
+#include "./receive_msg_act.h"
+#include "./exit_act.h"
 #include "./parse_simulation_act.h"
+#include "./receive_input_act.h"
 
-void parse_input(caf::event_based_actor* self);
+caf::behavior parse_input(caf::event_based_actor* self);
 
 #endif  // PARSE_INPUT_ACT_H_

@@ -5,11 +5,8 @@
 #include <fstream>
 #include <string>
 
-#include "../utils.h"
-#include "./cyclic_msg_act.h"
-#include "./receive_msg_act.h"
-#include "./exit_act.h"
+#include "caf/all.hpp"
 
-caf::behavior parse_simulation(caf::event_based_actor* self, const int& skt);
+caf::behavior parse_simulation(caf::event_based_actor* self, const int& skt, const caf::actor& master);
 
 #endif  // PARSE_SIMULATION_ACT_H_

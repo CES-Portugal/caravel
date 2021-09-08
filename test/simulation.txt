@@ -1,6 +1,6 @@
 # command [id] [message] [flag]
 # receive for x
-receive
+# receive
 send 123 ab every 1 sec
 send 234 aa
 send 222 feed every 2 sec
