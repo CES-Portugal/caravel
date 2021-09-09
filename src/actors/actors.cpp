@@ -5,19 +5,6 @@ using namespace caf;
 using namespace caf::io;
 
 /* 
-void blocking_calculator_fun(blocking_actor* self) {
-  bool running = true;
-  self->receive_while(running)( //
-    [](add_atom, int32_t a, int32_t b) { return a+b; },
-    [](sub_atom, int32_t a, int32_t b) { return a - b; },
-    [&](exit_msg& em) {
-      if (em.reason) {
-        self->fail_state(std::move(em.reason));
-        running = false;
-      }
-    });
-}
-
 behavior send_cyclic_messages(event_based_actor* self,int num, int delay) {
     aout(self) << "Hi there! This is actor nr. " << num << "!" << std::endl;
     std::chrono::seconds timeout{delay};
@@ -112,7 +99,7 @@ void receive_msg2(event_based_actor* self, const int& skt, const actor& buddy){
 
 void caf_main(actor_system& sys) {
     //May not be necessary!!!!!!!!
-    auto send_grp = sys.groups().get_local("sender");
+    //auto send_grp = sys.groups().get_local("sender");
     
     auto input_act = sys.spawn(parse_input);
     

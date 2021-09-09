@@ -12,6 +12,6 @@
 
 #include "../utils.h"
 
-caf::behavior log_message(caf::event_based_actor* self, bool rcv_msg, const std::chrono::steady_clock::time_point& start);
+caf::behavior log_message(caf::event_based_actor* self);
 
 #endif  // LOG_MSG_ACT_H_

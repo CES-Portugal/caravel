@@ -21,25 +21,26 @@ bool inspect(Inspector& f, can_frame& x) {
 }
 
 
+behavior log_message(event_based_actor* self){
+    auto pcapWriter = make_shared<pcpp::PcapFileWriterDevice>("./logs/output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
+    bool rcv_msg = false;
+    auto start = chrono::steady_clock::now();
 
+    if (!(*pcapWriter).open(rcv_msg))
+    {
+        aout(self) << "Cannot open output.pcap for writing" << endl;
+        self->quit(exit_reason::kill);
+    }
 
-behavior log_message(event_based_actor* self, bool rcv_msg, const chrono::steady_clock::time_point& start){
-    //pcpp::PcapFileWriterDevice pcapWriter("./logs/output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
-
-    auto setup_vars = [&, self] {
-        /* if (!pcapWriter.open())
-        {
-            aout(self) << "Cannot open output.pcap for writing" << endl;
-            exit(1);
-        } */
-    };
+    self->set_exit_handler([=] (const exit_msg& msg){
+            (*pcapWriter).close();
+        }
+    );
 
     return {
-        [=](const can_frame& frame) {
+        [=](const can_frame& frame) mutable {
             struct timespec time;
             chrono::steady_clock::time_point end = chrono::steady_clock::now();
-
-            //setup_vars();
 
             if(!rcv_msg)
                 end=start;
@@ -47,10 +48,12 @@ behavior log_message(event_based_actor* self, bool rcv_msg, const chrono::steady
             elapsed_time(start, end, time);
                 
             pcpp::RawPacket rawPacket(frame.data, frame.can_dlc, time,false, pcpp::LINKTYPE_CAN_SOCKETCAN);
-            //pcapWriter.writePacket(rawPacket);
-            aout(self) << "Pcap logger" << endl;
-            if(!rcv_msg) self->become(log_message(self, true, chrono::steady_clock::now()));
-            //MISING CLOSE PCAPWRITER
+            (*pcapWriter).writePacket(rawPacket);
+
+            if(!rcv_msg) {
+                rcv_msg = true;
+                start = chrono::steady_clock::now();
+            }
         },
     };
 }

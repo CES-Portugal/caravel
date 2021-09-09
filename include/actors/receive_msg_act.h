@@ -5,10 +5,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <linux/can.h>
-
-#include "caf/all.hpp"
-
 #include "./log_msg_act.h"
 #include "./output_msg_act.h"
 

@@ -61,22 +61,19 @@ int setup_socket(int& skt){
 behavior parse_input(event_based_actor* self){
 
     int skt;
-    string line;
-    bool receiving=false;
+    auto receiving = make_shared<bool>(false);
     
     if (setup_socket(skt)) self->quit(exit_reason::kill);
 
-    self->set_exit_handler([self, &receiving]
-        (const exit_msg& msg){
-            aout(self) << "receiver is down" << endl;
-            receiving = false;
+    self->set_exit_handler([=] (const exit_msg& msg){
+            *receiving = false;
         }
     );
 
     self->spawn<detached>(receive_input, self);
 
     return{
-        [=, &receiving](const string& line){
+        [=](const string& line) mutable {
             stringstream str_stream(line);
 
             string command;
@@ -85,7 +82,7 @@ behavior parse_input(event_based_actor* self){
             if(command=="#") return;
 
             if(command == "receive"){
-                if(receiving){
+                if(*receiving){
                     aout(self) << "\nAlready reading from socket!\n" << endl;
                     return;
                 }
@@ -94,8 +91,8 @@ behavior parse_input(event_based_actor* self){
                 interval_from_str(line, interval, "for");
 
                 auto receiver = self->spawn(receive_msg, skt, interval);
-                self->link_to(receiver);  //Not working yet!!!
-                receiving=true;
+                self->link_to(receiver);
+                *receiving=true;
             } 
             else if(command == "send") {
                 struct can_frame frame;
@@ -124,9 +121,7 @@ behavior parse_input(event_based_actor* self){
                 string path;
                 str_stream >> path;
 
-                //if (setup_socket(skt)) self->quit(exit_reason::kill);
-
-                auto simulation_parser = self->spawn(parse_simulation, skt, self);
+                auto simulation_parser = self->spawn(parse_simulation, self);
                 self->send(simulation_parser, path);
             }
             else if(command == "exit"){

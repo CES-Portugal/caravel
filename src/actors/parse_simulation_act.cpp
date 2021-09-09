@@ -3,7 +3,7 @@
 using namespace std;
 using namespace caf;
 
-behavior parse_simulation(event_based_actor* self, const int& skt, const actor& master){
+behavior parse_simulation(event_based_actor* self, const actor& master){
     return {
         [=](const string& file_path) {
             ifstream file;

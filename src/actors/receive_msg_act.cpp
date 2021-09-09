@@ -28,7 +28,7 @@ void receive_msg(event_based_actor* self, const int& skt, const int& interval){
     struct can_frame frame;
     auto start = chrono::steady_clock::now();
     auto end = start;
-    auto msg_logger = self->spawn(log_message, false, start);
+    auto msg_logger = self->spawn(log_message);
 
     aout(self) << "Actor nº: "<< self->id() <<". Is reading data from socket!" << endl;
     while ((interval==-1) || (chrono::duration_cast<chrono::microseconds>(end - start).count() < interval))

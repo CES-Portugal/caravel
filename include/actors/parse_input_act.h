@@ -9,11 +9,11 @@
 #include <fcntl.h>
 
 #include "../utils.h"
-#include "./cyclic_msg_act.h"
-#include "./receive_msg_act.h"
-#include "./exit_act.h"
-#include "./parse_simulation_act.h"
 #include "./receive_input_act.h"
+#include "./receive_msg_act.h"
+#include "./cyclic_msg_act.h"
+#include "./parse_simulation_act.h"
+#include "./exit_act.h"
 
 caf::behavior parse_input(caf::event_based_actor* self);
 
