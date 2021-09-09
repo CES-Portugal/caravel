@@ -24,7 +24,6 @@ behavior send_cyclic_messages(event_based_actor* self,int num, int delay) {
 CAF_BEGIN_TYPE_ID_BLOCK(custom_types_1, first_custom_type_id)
 
   CAF_ADD_TYPE_ID(custom_types_1, (can_frame))
-  //CAF_ADD_TYPE_ID(custom_types_1, (pcpp::PcapFileWriterDevice))
 
 CAF_END_TYPE_ID_BLOCK(custom_types_1)
 
@@ -39,27 +38,7 @@ bool inspect(Inspector& f, can_frame& x) {
                                 
 }
 
-/* template <class Inspector>
-bool inspect(Inspector& f, PcapFileWriterDevice& x) {
-	return f.object(x).fields(f.field("linkLayerType", x.linkLayerType),
-							  f.field("fileName", x.fileName));
-} */
-/* template <class Inspector>
-bool inspect(Inspector& f, pcpp::PcapFileWriterDevice& x) {
-    auto get_stats = [&x]() -> decltype(auto) { PcapStats stats; x.getStatistics(stats); return stats; };
-    auto set_stats = [&x]() {
-        return true;
-    };
-    return f.object(x).fields(f.field("stats", get_stats, set_stats));
-} */
-/* template <class Inspector>
-bool inspect(Inspector& f, chrono::time_point& x) {
-  return f.object(x).fields(f.field("duration", x.duration),
-                                f.field("rep", x.rep),
-                                f.field("period", x.period),
-                                f.field("clock", x.clock));
-                                
-} */
+
 behavior basic_act(event_based_actor* self){
     return {
         [=](const string& value) {
@@ -104,8 +83,8 @@ void caf_main(actor_system& sys) {
     auto input_act = sys.spawn(parse_input);
     
     /* auto& mm = sys.middleman();
-    scoped_actor self{sys};
- */
+    scoped_actor self{sys}; */
+   
     //Middleman example without default actor
     /* char letter;
     cin >> letter;
@@ -144,7 +123,7 @@ void caf_main(actor_system& sys) {
     if(letter=="local"){
         auto outputter = sys.spawn(output_message);
         if (auto maybe_port = mm.publish(outputter, 1234)) {
-            auto *port = maybe_port;
+            auto port = *maybe_port;
         } 
         else {
             aout(self) << "Failed to open port: " << to_string(maybe_port.error()) << endl;
@@ -153,22 +132,19 @@ void caf_main(actor_system& sys) {
 
     if(letter=="remote"){
         if( auto actor = mm.remote_actor("raspberrypi.local", 1234) ){
-            auto act = *act;
+            auto act = *actor;
             
             int skt;
 
             if (setup_socket(skt)) return;
 
-            sys.spawn(receive_msg2, skt, );
-            receive_msg2
-            self->send(basic, "hello");
-            self->send_exit(basic, exit_reason::kill);
+            sys.spawn(receive_msg2, skt, act);
         }
         else{
-            aout(self) << "Failed to connect: " << to_string(act.error()) << endl;
+            aout(self) << "Failed to connect: " << to_string(actor.error()) << endl;
         }
-    }
-    */
+    } */
+   
     /* scoped_actor self{sys};
     self->await_all_other_actors_done();
     aout(self) << "All actors done!" << endl;
