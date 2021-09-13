@@ -53,7 +53,7 @@ void interval_from_str(const string& str, int& interval, const string& delimiter
     string new_str=str.substr(found);
 
     string aux, units;
-    double value, multiplier = pow(10.0,6.0);;
+    double value, multiplier = pow(10.0,6.0);
 
     stringstream str_stream(new_str);
     str_stream >> aux >> value >> units;

@@ -3,4 +3,4 @@
 receive for 10 sec
 send 123 ab every 1 sec
 send 234 aa
-send 222 feed every 2 sec
+send 222 feed every 2 mili

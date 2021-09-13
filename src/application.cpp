@@ -78,7 +78,11 @@ void run_send(const int& id,const string& message, const int& interval){
     printf("Message details:\n");
     printf("can_id  = 0x%X\r\n", frame.can_id);
     printf("can_dlc = %d\r\n", frame.can_dlc);
-    printf("can_data = %s\r\n", frame.data);
+    printf("can_data = [");
+    for (size_t i = 0; i < 7; i++) {
+        printf("%d, ",frame.data[i]);
+    }
+    printf("%d]\r\n\n",frame.data[7]);
     
     //Send messages
     while (n_msg >= 0)

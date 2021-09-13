@@ -13,11 +13,13 @@ int main(int argc, char* argv[])
     //sudo ifconfig can0 up
 
     try {
+        string file_path;
 
         // Declare command line (generic) options 
         po::options_description generic("Generic options");
         generic.add_options()
-            ("help,h", "Produce help message")    
+            ("help,h", "Produce help message")
+            ("file,f", po::value<string>(&file_path), "File path")  
         ;
 
         // Declare the supported options on the command line and file
@@ -44,8 +46,12 @@ int main(int argc, char* argv[])
         po::variables_map vm;
         po::store(po::command_line_parser(argc, argv).
                     options(visible).positional(p).run(), vm);
-        po::store(po::parse_config_file("./test/caravel_command_ex.cfg", visible), vm);
         po::notify(vm);
+        if(!file_path.empty()){
+            vm.clear();
+            po::store(po::parse_config_file(file_path.c_str(), visible), vm);
+            po::notify(vm);
+        }
     
         if (vm.count("help")) {
             cout << visible << endl;
