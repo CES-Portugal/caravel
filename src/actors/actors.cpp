@@ -4,49 +4,6 @@ using namespace std;
 using namespace caf;
 using namespace caf::io;
 
-/* 
-behavior send_cyclic_messages(event_based_actor* self,int num, int delay) {
-    aout(self) << "Hi there! This is actor nr. " << num << "!" << std::endl;
-    std::chrono::seconds timeout{delay};
-    self->delayed_send(self, timeout, timeout_atom_v);
-    return {
-        [=](timeout_atom) {
-        aout(self) << "Actor nr. " << num << " says goodbye after waiting for "
-                    << delay << "ms!" << std::endl;
-        //self->delayed_send(self, timeout, timeout_atom_v);
-        },
-        after(chrono::seconds(3)) >> [] { cout << "Cyclic messaging!\n"; }
-    };
-}
- */
-
-
-CAF_BEGIN_TYPE_ID_BLOCK(custom_types_1, first_custom_type_id)
-
-  CAF_ADD_TYPE_ID(custom_types_1, (can_frame))
-
-CAF_END_TYPE_ID_BLOCK(custom_types_1)
-
-template <class Inspector>
-bool inspect(Inspector& f, can_frame& x) {
-  return f.object(x).fields(f.field("can_id", x.can_id),
-                                f.field("can_dlc", x.can_dlc),
-                                f.field("__pad", x.__pad),
-                                f.field("__res0", x.__res0),
-                                f.field("__res1", x.__res1),
-                                f.field("data", x.data));
-                                
-}
-
-
-behavior basic_act(event_based_actor* self){
-    return {
-        [=](const string& value) {
-            aout(self) << "Received message with value: " << value << endl;
-            
-        },
-    };
-}
 
 void receive_msg2(event_based_actor* self, const int& skt, const actor& buddy){
     int nbytes;
@@ -77,8 +34,6 @@ void receive_msg2(event_based_actor* self, const int& skt, const actor& buddy){
 }
 
 void caf_main(actor_system& sys) {
-    //May not be necessary!!!!!!!!
-    //auto send_grp = sys.groups().get_local("sender");
     
     auto input_act = sys.spawn(parse_input);
     

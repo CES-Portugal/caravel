@@ -3,28 +3,17 @@
 using namespace std;
 using namespace caf;
 
-CAF_BEGIN_TYPE_ID_BLOCK(custom_types_1, first_custom_type_id)
-
-  CAF_ADD_TYPE_ID(custom_types_1, (can_frame))
-
-CAF_END_TYPE_ID_BLOCK(custom_types_1)
-
-template <class Inspector>
-bool inspect(Inspector& f, can_frame& x) {
-  return f.object(x).fields(f.field("can_id", x.can_id),
-                                f.field("can_dlc", x.can_dlc),
-                                f.field("__pad", x.__pad),
-                                f.field("__res0", x.__res0),
-                                f.field("__res1", x.__res1),
-                                f.field("data", x.data));
-                                
-}
-
 
 behavior log_message(event_based_actor* self){
-    auto pcapWriter = make_shared<pcpp::PcapFileWriterDevice>("./logs/output.pcap", pcpp::LINKTYPE_CAN_SOCKETCAN);
+    time_t t = time(0);
+    struct tm * now = localtime( &t );
+    char time_str[100];
+    strftime (time_str,50,"./logs/%F_%T.pcap",now);
+    auto pcapWriter = make_shared<pcpp::PcapFileWriterDevice>(time_str, pcpp::LINKTYPE_CAN_SOCKETCAN);
+
     bool rcv_msg = false;
     auto start = chrono::steady_clock::now();
+
 
     if (!(*pcapWriter).open(rcv_msg))
     {

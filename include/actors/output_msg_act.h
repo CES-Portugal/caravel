@@ -7,6 +7,8 @@
 
 #include "caf/all.hpp"
 
+#include "./inspector.h"
+
 caf::behavior output_message(caf::event_based_actor* self);
 
 #endif  // OUTPUT_MSG_ACT_H_
