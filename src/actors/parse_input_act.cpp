@@ -3,8 +3,10 @@
 using namespace std;
 using namespace caf;
 
+#define PORT 8080
 
-int setup_socket(int& skt){
+
+int setup_can_socket(int& skt){
     int ret;
     struct ifreq ifr;
     struct sockaddr_can addr;
@@ -47,7 +49,7 @@ behavior parse_input(event_based_actor* self){
     int skt;
     auto receiving = make_shared<bool>(false);
     
-    if (setup_socket(skt)) self->quit(exit_reason::kill);
+    if (setup_can_socket(skt)) self->quit(exit_reason::kill);
 
     self->set_exit_handler([=] (const exit_msg& msg){
             *receiving = false;

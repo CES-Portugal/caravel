@@ -17,6 +17,6 @@
 
 caf::behavior parse_input(caf::event_based_actor* self);
 
-int setup_socket(int& skt);
+int setup_can_socket(int& skt);
 
 #endif  // PARSE_INPUT_ACT_H_
