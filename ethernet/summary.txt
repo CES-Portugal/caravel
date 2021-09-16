@@ -1,0 +1,21 @@
+
+
+START: Wed Sep 15 14:11:01 2021
+|-Total: 100 (BYTE SPEED: 10787 bytes/s)
+	|-ARP: 0
+	|-IP: 73 (6115 bytes)
+		|-ICMP: 0
+			|-TTL EXPIRED: 0
+			|-ECHO REPLY: 0
+			|-REDIRECT: 0
+			|-UNREACHABLE: 0
+		|-TCP: 73
+		|-UDP: 0
+		|-Other IP: 0
+	|-Other: 27
+|-MAC BROAD: 0
+|-MAC SHORT: 0
+|-MAC LONG: 100
+|-IP BROAD: 0
+|-New MACs:
+END: Wed Sep 15 14:11:02 2021

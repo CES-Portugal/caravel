@@ -33,7 +33,7 @@ struct Filter {
 	int other; // count in other packet
 	int dump; // dump packets
 	uint16_t port; // only this port
-} filter =  {1, 0, 1, 0, 0, 0, 0, 0, 0};
+} filter =  {1, 1, 1, 1, 1, 1, 1, 0, 0};
 
 void log_summary() {
 
@@ -116,7 +116,6 @@ void buf_dump(unsigned char *data, int Size)
 
 void print_ethernet_header(unsigned char* buffer,int buflen)
 {
-    cout << "HERE4";
 	if (!filter.ethernet) return;
 
 	struct ethhdr *eth = (struct ethhdr *)(buffer);
@@ -144,7 +143,6 @@ void print_ethernet_header(unsigned char* buffer,int buflen)
 
 void print_ip_header(unsigned char* buffer,int buflen)
 {
-    cout << "HERE3";
 	if (!filter.ip) return;
 
 	struct iphdr *iph = (struct iphdr*)(buffer + sizeof(struct ethhdr));
@@ -173,7 +171,6 @@ void print_ip_header(unsigned char* buffer,int buflen)
 
 void print_arp_packet(unsigned char* buffer, int buflen)
 {
-    cout << "HERE1";
     fprintf(log_file,"\n*************************ARP Packet******************************");
    	print_ethernet_header(buffer, buflen);
 
@@ -193,7 +190,6 @@ void print_arp_packet(unsigned char* buffer, int buflen)
 
 void print_icmp_packet(unsigned char *buffer, int buflen)
 {
-    cout << "HERE2";
 	unsigned short iphdrlen;
 	struct iphdr *iph = (struct iphdr*)(buffer + sizeof(struct ethhdr));
 	iphdrlen = iph->ihl * 4;
@@ -233,7 +229,6 @@ void print_icmp_packet(unsigned char *buffer, int buflen)
 
 void print_tcp_packet(unsigned char* buffer,int buflen)
 {
-    cout << "HERE6";
 	unsigned short iphdrlen;
 	struct iphdr *iph = (struct iphdr*)(buffer + sizeof(struct ethhdr));
 	iphdrlen = iph->ihl * 4;
@@ -271,7 +266,6 @@ void print_tcp_packet(unsigned char* buffer,int buflen)
 
 void print_udp_packet(unsigned char* buffer, int buflen)
 {
-    cout << "HERE5";
 	unsigned short iphdrlen;
 	struct iphdr *iph = (struct iphdr*)(buffer + sizeof(struct ethhdr));
 	iphdrlen = iph->ihl * 4;
@@ -313,7 +307,6 @@ void data_process(unsigned char* buffer,int buflen)
 		++total;
         print_arp_packet(buffer, buflen);
     } else if (eth->h_proto == 0x0008) { // IP
-        cout << "IN";
 		ip_bytes += (buflen - sizeof(struct ethhdr));
 		
 		switch (iph->protocol)
