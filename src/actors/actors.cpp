@@ -15,9 +15,7 @@ void caf_main(actor_system& sys) {
     
 	//Middleman test
     /* auto& mm = sys.middleman();
-	sys.spawn(middleman_act, &mm); */
-    
-	//scoped_actor self{sys};
+	sys.spawn(middleman_act, &mm) */;
 }
 
 int run_interactive(){
